@@ -1,0 +1,249 @@
+<div id="root">
+  <div class="container">
+    <h1>Todo App</h1>
+    <h2>Welcome <%= user.email %></h2>
+    <h3><a href="/logout">LogOut</a></h3>
+    <div id="todoApp" style="display: none;">
+      <form id="todoForm">
+        <input type="text" id="taskInput" placeholder="Enter a task" required />
+        <button type="submit">Add Task</button>
+      </form>
+      <ul id="todoList"></ul>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+  const todoApp = document.getElementById('todoApp');
+  const todoForm = document.getElementById('todoForm');
+  const taskInput = document.getElementById('taskInput');
+  const todoList = document.getElementById('todoList');
+
+  let isAuthenticated = true;
+  if (isAuthenticated) {
+
+    todoApp.style.display = 'block';
+
+    // Fetch and display todos
+    const fetchTodos = async () => {
+      const todos = await fetch('/todos').then((res) => res.json());
+      todoList.innerHTML = '';
+      todos.forEach((todo) => {
+        const li = document.createElement('li');
+        li.textContent = todo.task;
+
+        const completeButton = document.createElement('button');
+        completeButton.textContent = todo.completed ? 'Mark Incomplete' : 'Mark Complete';
+        completeButton.addEventListener('click', async () => {
+          await fetch(`/todos/${todo._id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completed: !todo.completed }),
+          });
+          fetchTodos();
+        });
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', async () => {
+          await fetch(`/todos/${todo._id}`, { method: 'DELETE' });
+          fetchTodos();
+        });
+
+        li.appendChild(completeButton);
+        li.appendChild(deleteButton);
+        todoList.appendChild(li);
+      });
+    };
+
+    fetchTodos();
+
+    // Add new task
+    todoForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const task = taskInput.value.trim();
+
+      if (!task) return;
+
+      await fetch('/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task }),
+      });
+
+      taskInput.value = '';
+      fetchTodos();
+    });
+  } else {
+    authMessage.textContent = 'Unauthorized. Please log in.';
+    authMessage.style.color = 'red';
+  }
+});
+
+</script>
+
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+@media (max-width: 500px) {
+  .container {
+    width: 90%;
+    padding: 10px;
+  }
+
+  h1, h2 {
+    font-size: 1.5rem;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    width: calc(100% - 15px);
+  }
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+h1 {
+  color: #333;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 10p
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  text-align: center;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+li button {
+  background-color: #f44336;
+}
+
+li button:hover {
+  background-color: #d32f2f;
+}
+
+
+/* Enhance the input and button layout */
+.todo-input-section {
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
+  align-items: center; /* Center align items horizontally */
+  gap: 10px; /* Add space between the input and button */
+  margin-top: 15px;
+}
+
+.todo-input-section input[type="text"] {
+  width: 100%; /* Full width for the input */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.todo-input-section button {
+  padding: 10px 15px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: auto; /* Keep the button width to fit its content */
+}
+
+.todo-input-section button:hover {
+  background-color: #45a049;
+}
+
+/* Style for the list */
+.todo-list {
+  margin-top: 20px;
+  padding: 0;
+  list-style-type: none;
+}
+
+.todo-list li {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.todo-list li button {
+  background-color: #f44336;
+  border: none;
+  padding: 5px 10px;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.todo-list li button:hover {
+  background-color: #d32f2f;
+}
+
+</style>
